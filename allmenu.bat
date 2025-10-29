@@ -1616,7 +1616,7 @@ goto menu
 :opt24
 echo.
 echo Membuka Dashboard Surat...
-start chrome https://v0-crud-surat.vercel.app/dashboard/surat
+start chrome https://www.google.com/webhp
 timeout /t 1 >nul
 goto menu
 
@@ -2159,3 +2159,4 @@ if /i "%confirm%"=="Y" (
 ) else (
     goto menu
 )
+
