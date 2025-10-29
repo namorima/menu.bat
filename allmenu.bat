@@ -1753,17 +1753,17 @@ set "checkPort=%~1"
 set "serviceName=%~2"
 set "commonProcess=%~3"
 
-netstat -ano | findstr ":%checkPort% " | findstr "LISTENING" >nul 2>&1
+netstat -ano | findstr ":%checkPort%" | findstr "LISTENING" >nul 2>&1
 if !errorlevel! EQU 0 (
     set /a idx+=1
     set "port!idx!=%checkPort%"
     set "service!idx!=%serviceName%"
-    
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%checkPort% " ^| findstr "LISTENING"') do (
+
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%checkPort%" ^| findstr "LISTENING" ^| findstr /V "::"') do (
         set "pid!idx!=%%a"
         goto :check_port_found
     )
-    
+
     :check_port_found
     for /f "tokens=1" %%b in ('tasklist /FI "PID eq !pid%idx%!" /NH 2^>nul') do (
         set "process!idx!=%%b"
