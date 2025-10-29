@@ -22,26 +22,27 @@ echo [SYSTEM ^& TOOLS]
 echo  1. Command Prompt              2. System Info
 echo  3. Services Manager            4. Task Manager
 echo  5. Device Manager              6. Registry Editor
+echo  7. PowerShell Execution Policy
 echo.
 echo [APLIKASI ^& WORKSPACE]
-echo  7. Google Chrome               8. Buka Kerja Space
-echo  9. Buka Folder Downloads      10. Buka Folder Startup
+echo  8. Google Chrome               9. Buka Kerja Space
+echo 10. Buka Folder Downloads      11. Buka Folder Startup
 echo.
 echo [NETWORK ^& SECURITY]
-echo 11. Papar IP Printer           12. Windows Defender
-echo 13. Event Viewer (Security)    14. Network Connections
-echo 15. SeeMyPass (WiFi)           16. IP Config Info
-echo 17. Monitor Router Internet    18. Fix Internet Connection
+echo 12. Papar IP Printer           13. Windows Defender
+echo 14. Event Viewer (Security)    15. Network Connections
+echo 16. SeeMyPass (WiFi)           17. IP Config Info
+echo 18. Monitor Router Internet    19. Fix Internet Connection
 echo.
 echo [SYSTEM INFO ^& SETTINGS]
-echo 19. Control Panel              20. Disk Management
-echo 21. Check Lesen Windows        22. Printer Settings
+echo 20. Control Panel              21. Disk Management
+echo 22. Check Lesen Windows        23. Printer Settings
 echo.
 echo [WEB ^& UTILITIES]
-echo 23. Dashboard Surat            24. Clear Temp Files
-echo 25. Change DNS Settings
+echo 24. Dashboard Surat            25. Clear Temp Files
+echo 26. Change DNS Settings
 echo.
-echo 26. Keluar
+echo 27. Keluar
 echo ===============================================================================
 set /p pilihan=Sila pilih (1-26): 
 
@@ -55,13 +56,13 @@ if "%pilihan%"=="" (
 
 :: Check if input is number
 set "valid=0"
-for %%i in (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26) do (
+for %%i in (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27) do (
     if "%pilihan%"=="%%i" set "valid=1"
 )
 
 if "%valid%"=="0" (
     echo.
-    echo [ERROR] Pilihan tidak sah! Sila pilih nombor 1-26.
+    echo [ERROR] Pilihan tidak sah! Sila pilih nombor 1-27.
     timeout /t 2 >nul
     goto menu
 )
@@ -96,6 +97,7 @@ if "%pilihan%"=="23" goto opt23
 if "%pilihan%"=="24" goto opt24
 if "%pilihan%"=="25" goto opt25
 if "%pilihan%"=="26" goto opt26
+if "%pilihan%"=="27" goto opt27
 
 :opt1
 echo.
@@ -143,13 +145,402 @@ start regedit
 goto menu
 
 :opt7
+cls
+setlocal enabledelayedexpansion
+echo ===============================================================================
+echo                    POWERSHELL EXECUTION POLICY
+echo ===============================================================================
+echo.
+
+:: Check if running as admin
+net session >nul 2>&1
+if %errorLevel% NEQ 0 (
+    echo [WARNING] Untuk menukar policy, sila run script sebagai Administrator!
+    echo           Anda hanya boleh VIEW policy sahaja.
+    echo.
+)
+
+echo Mendapatkan Execution Policy semasa...
+echo.
+
+:: Get current execution policies
+echo ===============================================================================
+echo EXECUTION POLICY SEMASA:
+echo ===============================================================================
+
+:: Create temp file to store PowerShell output
+set "tempFile=%temp%\ps_policy_%random%.txt"
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ExecutionPolicy -List | Format-Table -AutoSize" > "%tempFile%"
+
+type "%tempFile%"
+del "%tempFile%" >nul 2>&1
+
+echo ===============================================================================
+echo.
+echo MAKLUMAT EXECUTION POLICY:
+echo -------------------------------------------------------------------------------
+echo Restricted      - Tidak boleh run script langsung (paling ketat)
+echo AllSigned       - Hanya script yang digitally signed boleh run
+echo RemoteSigned    - Local script boleh run, remote perlu signed (recommended)
+echo Unrestricted    - Semua script boleh run dengan warning
+echo Bypass          - Tiada restrictions, tiada warnings (paling longgar)
+echo Undefined       - Tiada policy ditetapkan (inherit dari scope lain)
+echo -------------------------------------------------------------------------------
+echo.
+
+:policy_menu
+echo PILIHAN:
+echo -------------------------------------------------------------------------------
+echo 1. Set Policy untuk CurrentUser (User sahaja)
+echo 2. Set Policy untuk LocalMachine (Semua users - perlu Admin)
+echo 3. Set Policy untuk Process (Temporary - session ini sahaja)
+echo 4. Reset ke Default (Restricted)
+echo 5. View Detailed Info
+echo 0. Kembali ke Menu Utama
+echo -------------------------------------------------------------------------------
+set /p policyChoice=Pilih (0-5): 
+
+if "!policyChoice!"=="0" (
+    endlocal
+    goto menu
+)
+
+if "!policyChoice!"=="1" goto set_currentuser
+if "!policyChoice!"=="2" goto set_localmachine
+if "!policyChoice!"=="3" goto set_process
+if "!policyChoice!"=="4" goto reset_policy
+if "!policyChoice!"=="5" goto view_details
+
+echo [ERROR] Pilihan tidak sah!
+timeout /t 2 >nul
+cls
+echo ===============================================================================
+echo                    POWERSHELL EXECUTION POLICY
+echo ===============================================================================
+echo.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ExecutionPolicy -List | Format-Table -AutoSize"
+echo.
+goto policy_menu
+
+:set_currentuser
+cls
+echo ===============================================================================
+echo              SET EXECUTION POLICY - CURRENTUSER
+echo ===============================================================================
+echo.
+echo [INFO] Scope: CurrentUser
+echo        Hanya affect user: %USERNAME%
+echo        Tidak perlu Admin rights
+echo.
+echo -------------------------------------------------------------------------------
+echo Pilih Policy Level:
+echo -------------------------------------------------------------------------------
+echo 1. Restricted      - Block semua scripts
+echo 2. AllSigned       - Hanya signed scripts
+echo 3. RemoteSigned    - Local scripts OK, remote perlu signed [RECOMMENDED]
+echo 4. Unrestricted    - Semua scripts dengan warning
+echo 5. Bypass          - Semua scripts tanpa warning
+echo 0. Kembali
+echo -------------------------------------------------------------------------------
+set /p levelChoice=Pilih level (0-5): 
+
+if "!levelChoice!"=="0" goto opt7
+
+set "policyLevel="
+if "!levelChoice!"=="1" set "policyLevel=Restricted"
+if "!levelChoice!"=="2" set "policyLevel=AllSigned"
+if "!levelChoice!"=="3" set "policyLevel=RemoteSigned"
+if "!levelChoice!"=="4" set "policyLevel=Unrestricted"
+if "!levelChoice!"=="5" set "policyLevel=Bypass"
+
+if not defined policyLevel (
+    echo [ERROR] Pilihan tidak sah!
+    timeout /t 2 >nul
+    goto set_currentuser
+)
+
+echo.
+echo ===============================================================================
+echo Menetapkan Execution Policy...
+echo ===============================================================================
+echo.
+echo Scope       : CurrentUser
+echo Policy      : !policyLevel!
+echo.
+set /p confirm=Teruskan? (Y/N): 
+
+if /i not "!confirm!"=="Y" goto opt7
+
+echo.
+echo Menukar policy...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy -ExecutionPolicy !policyLevel! -Scope CurrentUser -Force"
+
+if !errorlevel! EQU 0 (
+    echo.
+    echo [SUCCESS] Execution Policy telah dikemaskini!
+    echo.
+    echo Policy baru:
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ExecutionPolicy -Scope CurrentUser"
+) else (
+    echo.
+    echo [ERROR] Gagal menukar Execution Policy!
+)
+
+echo.
+pause
+goto opt7
+
+:set_localmachine
+cls
+echo ===============================================================================
+echo             SET EXECUTION POLICY - LOCALMACHINE
+echo ===============================================================================
+echo.
+
+:: Check admin rights
+net session >nul 2>&1
+if %errorLevel% NEQ 0 (
+    echo [ERROR] LocalMachine scope memerlukan Administrator rights!
+    echo         Sila run script sebagai Administrator.
+    echo.
+    pause
+    goto opt7
+)
+
+echo [INFO] Scope: LocalMachine
+echo        Affect semua users dalam komputer ini
+echo        Memerlukan Admin rights
+echo.
+echo -------------------------------------------------------------------------------
+echo Pilih Policy Level:
+echo -------------------------------------------------------------------------------
+echo 1. Restricted      - Block semua scripts
+echo 2. AllSigned       - Hanya signed scripts
+echo 3. RemoteSigned    - Local scripts OK, remote perlu signed [RECOMMENDED]
+echo 4. Unrestricted    - Semua scripts dengan warning
+echo 5. Bypass          - Semua scripts tanpa warning
+echo 0. Kembali
+echo -------------------------------------------------------------------------------
+set /p levelChoice=Pilih level (0-5): 
+
+if "!levelChoice!"=="0" goto opt7
+
+set "policyLevel="
+if "!levelChoice!"=="1" set "policyLevel=Restricted"
+if "!levelChoice!"=="2" set "policyLevel=AllSigned"
+if "!levelChoice!"=="3" set "policyLevel=RemoteSigned"
+if "!levelChoice!"=="4" set "policyLevel=Unrestricted"
+if "!levelChoice!"=="5" set "policyLevel=Bypass"
+
+if not defined policyLevel (
+    echo [ERROR] Pilihan tidak sah!
+    timeout /t 2 >nul
+    goto set_localmachine
+)
+
+echo.
+echo ===============================================================================
+echo Menetapkan Execution Policy...
+echo ===============================================================================
+echo.
+echo Scope       : LocalMachine
+echo Policy      : !policyLevel!
+echo.
+echo [WARNING] Ini akan affect SEMUA users dalam komputer ini!
+echo.
+set /p confirm=Adakah anda pasti? (Y/N): 
+
+if /i not "!confirm!"=="Y" goto opt7
+
+echo.
+echo Menukar policy...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy -ExecutionPolicy !policyLevel! -Scope LocalMachine -Force"
+
+if !errorlevel! EQU 0 (
+    echo.
+    echo [SUCCESS] Execution Policy telah dikemaskini!
+    echo.
+    echo Policy baru:
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ExecutionPolicy -Scope LocalMachine"
+) else (
+    echo.
+    echo [ERROR] Gagal menukar Execution Policy!
+)
+
+echo.
+pause
+goto opt7
+
+:set_process
+cls
+echo ===============================================================================
+echo               SET EXECUTION POLICY - PROCESS
+echo ===============================================================================
+echo.
+echo [INFO] Scope: Process
+echo        Hanya affect PowerShell session semasa
+echo        Policy akan hilang bila tutup PowerShell
+echo        Sesuai untuk testing temporary
+echo.
+echo -------------------------------------------------------------------------------
+echo Pilih Policy Level:
+echo -------------------------------------------------------------------------------
+echo 1. Restricted      - Block semua scripts
+echo 2. AllSigned       - Hanya signed scripts
+echo 3. RemoteSigned    - Local scripts OK, remote perlu signed
+echo 4. Unrestricted    - Semua scripts dengan warning
+echo 5. Bypass          - Semua scripts tanpa warning
+echo 0. Kembali
+echo -------------------------------------------------------------------------------
+set /p levelChoice=Pilih level (0-5): 
+
+if "!levelChoice!"=="0" goto opt7
+
+set "policyLevel="
+if "!levelChoice!"=="1" set "policyLevel=Restricted"
+if "!levelChoice!"=="2" set "policyLevel=AllSigned"
+if "!levelChoice!"=="3" set "policyLevel=RemoteSigned"
+if "!levelChoice!"=="4" set "policyLevel=Unrestricted"
+if "!levelChoice!"=="5" set "policyLevel=Bypass"
+
+if not defined policyLevel (
+    echo [ERROR] Pilihan tidak sah!
+    timeout /t 2 >nul
+    goto set_process
+)
+
+echo.
+echo ===============================================================================
+echo Membuka PowerShell dengan Policy: !policyLevel!
+echo ===============================================================================
+echo.
+echo PowerShell window akan dibuka dengan temporary policy.
+echo Policy hanya active dalam window tersebut.
+echo.
+pause
+
+start powershell -NoExit -Command "Set-ExecutionPolicy -ExecutionPolicy !policyLevel! -Scope Process -Force; Write-Host ''; Write-Host 'PowerShell Execution Policy (Process): !policyLevel!' -ForegroundColor Green; Write-Host 'Policy ini temporary dan akan hilang bila tutup window ini.' -ForegroundColor Yellow; Write-Host ''; Get-ExecutionPolicy -List"
+
+echo.
+echo PowerShell window telah dibuka dengan policy: !policyLevel!
+echo.
+pause
+goto opt7
+
+:reset_policy
+cls
+echo ===============================================================================
+echo                    RESET EXECUTION POLICY
+echo ===============================================================================
+echo.
+echo [WARNING] Ini akan reset Execution Policy ke default (Undefined/Restricted)
+echo.
+echo Policy yang akan direset:
+echo - CurrentUser  : Undefined
+echo - LocalMachine : Undefined (jika ada Admin rights)
+echo.
+set /p confirm=Adakah anda pasti mahu reset? (Y/N): 
+
+if /i not "!confirm!"=="Y" goto opt7
+
+echo.
+echo Mereset Execution Policy...
+echo.
+
+:: Reset CurrentUser
+echo [1/2] Reset CurrentUser...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope CurrentUser -Force" >nul 2>&1
+if !errorlevel! EQU 0 (
+    echo       [OK] CurrentUser direset
+) else (
+    echo       [WARNING] Gagal reset CurrentUser
+)
+
+:: Reset LocalMachine (if admin)
+echo [2/2] Reset LocalMachine...
+net session >nul 2>&1
+if %errorLevel% EQU 0 (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope LocalMachine -Force" >nul 2>&1
+    if !errorlevel! EQU 0 (
+        echo       [OK] LocalMachine direset
+    ) else (
+        echo       [WARNING] Gagal reset LocalMachine
+    )
+) else (
+    echo       [SKIPPED] Perlu Admin rights untuk reset LocalMachine
+)
+
+echo.
+echo [SUCCESS] Reset selesai!
+echo.
+echo Policy semasa:
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ExecutionPolicy -List | Format-Table -AutoSize"
+echo.
+pause
+goto opt7
+
+:view_details
+cls
+echo ===============================================================================
+echo                DETAILED EXECUTION POLICY INFORMATION
+echo ===============================================================================
+echo.
+
+:: Get detailed info
+echo Current Effective Policy:
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Host (Get-ExecutionPolicy) -ForegroundColor Cyan"
+echo.
+
+echo All Scopes:
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ExecutionPolicy -List | Format-Table -AutoSize"
+echo.
+
+echo -------------------------------------------------------------------------------
+echo PENJELASAN SCOPE:
+echo -------------------------------------------------------------------------------
+echo MachinePolicy   - Set by Group Policy (highest priority, cannot override)
+echo UserPolicy      - Set by Group Policy for user
+echo Process         - Current PowerShell session sahaja (temporary)
+echo CurrentUser     - User yang login sekarang
+echo LocalMachine    - Semua users dalam komputer (perlu admin)
+echo -------------------------------------------------------------------------------
+echo.
+
+echo CADANGAN BEST PRACTICE:
+echo -------------------------------------------------------------------------------
+echo 1. Untuk development/testing:
+echo    CurrentUser = RemoteSigned atau Unrestricted
+echo.
+echo 2. Untuk production/corporate:
+echo    LocalMachine = RemoteSigned (recommended)
+echo    atau AllSigned (untuk maximum security)
+echo.
+echo 3. Untuk temporary testing:
+echo    Guna Process scope (tidak permanent)
+echo -------------------------------------------------------------------------------
+echo.
+
+echo Current User     : %USERNAME%
+echo Computer Name    : %COMPUTERNAME%
+net session >nul 2>&1
+if %errorLevel% EQU 0 (
+    echo Admin Rights     : YES
+) else (
+    echo Admin Rights     : NO
+)
+echo.
+pause
+goto opt7
+
+:opt8
 echo.
 echo Membuka Google Chrome...
 start chrome
 timeout /t 1 >nul
 goto menu
 
-:opt8
+:opt9
 echo.
 echo Membuka Workspace...
 echo - Membuka Outlook...
@@ -169,48 +560,48 @@ echo Workspace dibuka!
 timeout /t 3 >nul
 goto menu
 
-:opt9
+:opt10
 echo.
 echo Membuka Folder Downloads...
 start %userprofile%\Downloads
 timeout /t 1 >nul
 goto menu
 
-:opt10
+:opt11
 echo.
 echo Membuka Folder Startup...
 start shell:startup
 timeout /t 1 >nul
 goto menu
 
-:opt11
+:opt12
 echo.
 echo Memaparkan IP Printer...
 start cmd /k "wmic printer get name,portname & echo. & echo Tekan sebarang kekunci untuk tutup... & pause >nul"
 goto menu
 
-:opt12
+:opt13
 echo.
 echo Membuka Windows Defender...
 start windowsdefender:
 timeout /t 1 >nul
 goto menu
 
-:opt13
+:opt14
 echo.
 echo Membuka Event Viewer (Security)...
 start eventvwr.msc /c:Security
 timeout /t 1 >nul
 goto menu
 
-:opt14
+:opt15
 echo.
 echo Membuka Network Connections...
 start ncpa.cpl
 timeout /t 1 >nul
 goto menu
 
-:opt15
+:opt16
 cls
 echo ===============================================================================
 echo                         SENARAI KATA LALUAN WiFi
@@ -329,13 +720,13 @@ pause
 endlocal
 goto menu
 
-:opt16
+:opt17
 echo.
 echo Memaparkan IP Configuration...
 start cmd /k "ipconfig /all & echo. & echo Tekan sebarang kekunci untuk tutup... & pause >nul"
 goto menu
 
-:opt17
+:opt18
 cls
 setlocal enabledelayedexpansion
 echo ===============================================================================
@@ -899,7 +1290,7 @@ if defined localIP echo Computer IP     : !localIP!
 echo.
 goto monitor_menu
 
-:opt18
+:opt19
 cls
 setlocal enabledelayedexpansion
 echo ===============================================================================
@@ -1195,41 +1586,41 @@ pause
 endlocal
 goto menu
 
-:opt19
+:opt20
 echo.
 echo Membuka Control Panel...
 start control
 timeout /t 1 >nul
 goto menu
 
-:opt20
+:opt21
 echo.
 echo Membuka Disk Management...
 start diskmgmt.msc
 timeout /t 1 >nul
 goto menu
 
-:opt21
+:opt22
 echo.
 echo Memeriksa Lesen Windows...
 start cmd /k "slmgr /xpr & echo. & echo Tekan sebarang kekunci untuk tutup... & pause >nul"
 goto menu
 
-:opt22
+:opt23
 echo.
 echo Membuka Printer Settings...
 start control printers
 timeout /t 1 >nul
 goto menu
 
-:opt23
+:opt24
 echo.
 echo Membuka Dashboard Surat...
 start chrome https://v0-crud-surat.vercel.app/dashboard/surat
 timeout /t 1 >nul
 goto menu
 
-:opt24
+:opt25
 cls
 setlocal enabledelayedexpansion
 echo ===============================================================================
@@ -1447,7 +1838,7 @@ endlocal
 pause
 goto menu
 
-:opt25
+:opt26
 cls
 setlocal enabledelayedexpansion
 echo ===============================================================================
@@ -1755,7 +2146,7 @@ pause
 endlocal
 goto menu
 
-:opt26
+:opt27
 cls
 echo ===============================================================================
 echo.
