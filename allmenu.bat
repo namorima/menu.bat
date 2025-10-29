@@ -33,18 +33,19 @@ echo 12. Papar IP Printer           13. Windows Defender
 echo 14. Event Viewer (Security)    15. Network Connections
 echo 16. SeeMyPass (WiFi)           17. IP Config Info
 echo 18. Monitor Router Internet    19. Fix Internet Connection
+echo 20. Manage Localhost Services
 echo.
 echo [SYSTEM INFO ^& SETTINGS]
-echo 20. Control Panel              21. Disk Management
-echo 22. Check Lesen Windows        23. Printer Settings
+echo 21. Control Panel              22. Disk Management
+echo 23. Check Lesen Windows        24. Printer Settings
 echo.
 echo [WEB ^& UTILITIES]
-echo 24. Dashboard Surat            25. Clear Temp Files
-echo 26. Change DNS Settings
+echo 25. Dashboard Surat            26. Clear Temp Files
+echo 27. Change DNS Settings
 echo.
-echo 27. Keluar
+echo 28. Keluar
 echo ===============================================================================
-set /p pilihan=Sila pilih (1-26): 
+set /p pilihan=Sila pilih (1-28): 
 
 :: Validate Input
 if "%pilihan%"=="" (
@@ -56,13 +57,13 @@ if "%pilihan%"=="" (
 
 :: Check if input is number
 set "valid=0"
-for %%i in (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27) do (
+for %%i in (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28) do (
     if "%pilihan%"=="%%i" set "valid=1"
 )
 
 if "%valid%"=="0" (
     echo.
-    echo [ERROR] Pilihan tidak sah! Sila pilih nombor 1-27.
+    echo [ERROR] Pilihan tidak sah! Sila pilih nombor 1-28.
     timeout /t 2 >nul
     goto menu
 )
@@ -98,6 +99,7 @@ if "%pilihan%"=="24" goto opt24
 if "%pilihan%"=="25" goto opt25
 if "%pilihan%"=="26" goto opt26
 if "%pilihan%"=="27" goto opt27
+if "%pilihan%"=="28" goto opt28
 
 :opt1
 echo.
@@ -1587,40 +1589,593 @@ endlocal
 goto menu
 
 :opt20
+cls
+setlocal enabledelayedexpansion
+echo ===============================================================================
+echo                      MANAGE LOCALHOST SERVICES
+echo ===============================================================================
+echo.
+echo Scanning localhost services...
+echo.
+
+:: Array to store service info
+set /a idx=0
+
+:: Common development ports untuk VSCode
+:: Port 80 - HTTP (Apache/Nginx/IIS)
+call :check_port 80 "HTTP Server" "Apache/Nginx/IIS"
+
+:: Port 443 - HTTPS
+call :check_port 443 "HTTPS Server" "Apache/Nginx/IIS"
+
+:: Port 3000 - React/Express/Next.js
+call :check_port 3000 "React/Express/Next.js" "node.exe/npm.exe"
+
+:: Port 3001 - React Alternative
+call :check_port 3001 "React Alt" "node.exe"
+
+:: Port 4200 - Angular
+call :check_port 4200 "Angular Dev Server" "node.exe"
+
+:: Port 5000 - Flask/ASP.NET
+call :check_port 5000 "Flask/ASP.NET" "python.exe/dotnet.exe"
+
+:: Port 5173 - Vite
+call :check_port 5173 "Vite Dev Server" "node.exe"
+
+:: Port 5500 - VSCode Live Server
+call :check_port 5500 "VSCode Live Server" "Code.exe"
+
+:: Port 8000 - Django/Laravel/FastAPI
+call :check_port 8000 "Django/Laravel/FastAPI" "python.exe/php.exe"
+
+:: Port 8080 - HTTP Alternative/Vue
+call :check_port 8080 "HTTP Alt/Vue" "Various"
+
+:: Port 3306 - MySQL
+call :check_port 3306 "MySQL Database" "mysqld.exe"
+
+:: Port 5432 - PostgreSQL
+call :check_port 5432 "PostgreSQL Database" "postgres.exe"
+
+:: Port 27017 - MongoDB
+call :check_port 27017 "MongoDB Database" "mongod.exe"
+
+:: Port 6379 - Redis
+call :check_port 6379 "Redis Cache" "redis-server.exe"
+
+:: Port 9000 - PHP-FPM
+call :check_port 9000 "PHP-FPM" "php-cgi.exe"
+
+:: Port 1433 - MS SQL Server
+call :check_port 1433 "MS SQL Server" "sqlservr.exe"
+
+:: Port 8888 - Jupyter Notebook
+call :check_port 8888 "Jupyter Notebook" "jupyter.exe/python.exe"
+
+set "totalServices=!idx!"
+
+echo ===============================================================================
+echo LOCALHOST SERVICES AKTIF (VSCode Development)
+echo ===============================================================================
+
+if !totalServices! EQU 0 (
+    echo.
+    echo [INFO] Tiada localhost services yang aktif dijumpai.
+    echo.
+    echo Development ports yang di-scan:
+    echo -------------------------------------------------------------------------------
+    echo Web Servers:
+    echo   - Port 80     : HTTP (Apache/Nginx)
+    echo   - Port 443    : HTTPS
+    echo   - Port 8080   : HTTP Alternative
+    echo.
+    echo Frontend Frameworks:
+    echo   - Port 3000   : React/Next.js/Express
+    echo   - Port 4200   : Angular
+    echo   - Port 5173   : Vite
+    echo   - Port 5500   : VSCode Live Server
+    echo   - Port 8080   : Vue.js
+    echo.
+    echo Backend Frameworks:
+    echo   - Port 5000   : Flask/ASP.NET
+    echo   - Port 8000   : Django/Laravel/FastAPI
+    echo   - Port 9000   : PHP-FPM
+    echo.
+    echo Databases:
+    echo   - Port 3306   : MySQL
+    echo   - Port 5432   : PostgreSQL
+    echo   - Port 27017  : MongoDB
+    echo   - Port 6379   : Redis
+    echo   - Port 1433   : MS SQL Server
+    echo.
+    echo Other:
+    echo   - Port 8888   : Jupyter Notebook
+    echo -------------------------------------------------------------------------------
+    echo.
+    pause
+    endlocal
+    goto menu
+)
+
+echo.
+echo Jumlah services aktif: !totalServices!
+echo.
+echo -------------------------------------------------------------------------------
+echo No  Port   Service                         Process          PID      
+echo -------------------------------------------------------------------------------
+
+for /L %%i in (1,1,!totalServices!) do (
+    set "displayNum=%%i"
+    if %%i LSS 10 set "displayNum= %%i"
+    echo !displayNum!  !port%%i!   !service%%i!                    !process%%i!      !pid%%i!
+)
+
+echo ===============================================================================
+echo.
+
+:localhost_menu
+echo PILIHAN:
+echo -------------------------------------------------------------------------------
+echo 1. Stop Service (by number)
+echo 2. Stop All Localhost Services  
+echo 3. Refresh / Scan Again
+echo 4. Open in Browser
+echo 5. View All Listening Ports
+echo 6. Kill Process by Port Number
+echo 7. Quick Actions (Common Tasks)
+echo 8. Start XAMPP/WAMP Services
+echo 0. Kembali ke Menu Utama
+echo -------------------------------------------------------------------------------
+set /p localChoice=Pilih (0-8): 
+
+if "!localChoice!"=="0" (
+    endlocal
+    goto menu
+)
+
+if "!localChoice!"=="1" goto stop_service
+if "!localChoice!"=="2" goto stop_all
+if "!localChoice!"=="3" goto opt20
+if "!localChoice!"=="4" goto open_browser
+if "!localChoice!"=="5" goto view_all_ports
+if "!localChoice!"=="6" goto kill_by_port
+if "!localChoice!"=="7" goto quick_actions
+if "!localChoice!"=="8" goto start_services
+
+echo [ERROR] Pilihan tidak sah!
+timeout /t 2 >nul
+goto localhost_menu
+
+:check_port
+:: Usage: call :check_port PORT_NUMBER "SERVICE_NAME" "COMMON_PROCESS"
+set "checkPort=%~1"
+set "serviceName=%~2"
+set "commonProcess=%~3"
+
+netstat -ano | findstr ":%checkPort% " | findstr "LISTENING" >nul 2>&1
+if !errorlevel! EQU 0 (
+    set /a idx+=1
+    set "port!idx!=%checkPort%"
+    set "service!idx!=%serviceName%"
+    
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%checkPort% " ^| findstr "LISTENING"') do (
+        set "pid!idx!=%%a"
+        goto :check_port_found
+    )
+    
+    :check_port_found
+    for /f "tokens=1" %%b in ('tasklist /FI "PID eq !pid%idx%!" /NH 2^>nul') do (
+        set "process!idx!=%%b"
+    )
+)
+goto :eof
+
+:stop_service
+echo.
+set /p serviceNum=Masukkan nombor service yang nak stop (1-!totalServices!): 
+
+if not defined serviceNum goto localhost_menu
+if !serviceNum! LSS 1 goto localhost_menu
+if !serviceNum! GTR !totalServices! goto localhost_menu
+
+set "targetPID=!pid%serviceNum%!"
+set "targetService=!service%serviceNum%!"
+set "targetProcess=!process%serviceNum%!"
+set "targetPort=!port%serviceNum%!"
+
+echo.
+echo ===============================================================================
+echo Menghentikan Service...
+echo ===============================================================================
+echo.
+echo Service  : !targetService!
+echo Port     : !targetPort!
+echo Process  : !targetProcess!
+echo PID      : !targetPID!
+echo.
+set /p confirm=Adakah anda pasti mahu stop service ini? (Y/N): 
+
+if /i not "!confirm!"=="Y" goto localhost_menu
+
+echo.
+echo Stopping process...
+taskkill /PID !targetPID! /F >nul 2>&1
+
+if !errorlevel! EQU 0 (
+    echo [SUCCESS] Service telah dihentikan!
+    echo.
+    echo Tip: Untuk start semula service, run command yang berkaitan:
+    echo      - npm start / npm run dev
+    echo      - python manage.py runserver
+    echo      - ng serve
+    echo      - dll.
+    timeout /t 3 >nul
+) else (
+    echo [ERROR] Gagal menghentikan service!
+    echo Mungkin perlu Admin rights.
+    pause
+)
+
+goto opt20
+
+:stop_all
+echo.
+echo ===============================================================================
+echo [WARNING] STOP ALL LOCALHOST SERVICES
+echo ===============================================================================
+echo.
+echo Ini akan menghentikan SEMUA !totalServices! services yang aktif:
+echo.
+for /L %%i in (1,1,!totalServices!) do (
+    echo - Port !port%%i!: !service%%i! ^(!process%%i! - PID: !pid%%i!^)
+)
+echo.
+echo [WARNING] Pastikan anda save semua kerja dalam VSCode sebelum continue!
+echo.
+set /p confirmAll=Adakah anda pasti mahu stop SEMUA services? (Y/N): 
+
+if /i not "!confirmAll!"=="Y" goto localhost_menu
+
+echo.
+echo Menghentikan semua services...
+echo.
+
+for /L %%i in (1,1,!totalServices!) do (
+    echo [%%i/!totalServices!] Stopping Port !port%%i! - !service%%i!...
+    taskkill /PID !pid%%i! /F >nul 2>&1
+    if !errorlevel! EQU 0 (
+        echo          [OK] !process%%i! stopped
+    ) else (
+        echo          [FAILED] Could not stop !process%%i!
+    )
+)
+
+echo.
+echo [SUCCESS] Proses selesai!
+echo.
+echo Semua development servers telah dihentikan.
+echo Sila start semula dari VSCode terminal bila perlu.
+timeout /t 3 >nul
+goto opt20
+
+:open_browser
+cls
+echo ===============================================================================
+echo                   OPEN LOCALHOST IN BROWSER
+echo ===============================================================================
+echo.
+echo Quick Launch (Common Development URLs):
+echo.
+echo  1. http://localhost
+echo  2. http://localhost:3000  (React/Next.js/Express)
+echo  3. http://localhost:4200  (Angular)
+echo  4. http://localhost:5000  (Flask/ASP.NET)
+echo  5. http://localhost:5173  (Vite)
+echo  6. http://localhost:5500  (VSCode Live Server)
+echo  7. http://localhost:8000  (Django/Laravel)
+echo  8. http://localhost:8080  (Vue.js/Alt)
+echo  9. http://localhost:8888  (Jupyter)
+echo 10. Custom Port
+echo  0. Kembali
+echo.
+
+:: Show active services
+if !totalServices! GTR 0 (
+    echo Active Services:
+    for /L %%i in (1,1,!totalServices!) do (
+        echo  - Port !port%%i!: !service%%i!
+    )
+    echo.
+)
+
+set /p browserChoice=Pilih (0-10): 
+
+if "!browserChoice!"=="0" goto localhost_menu
+if "!browserChoice!"=="1" start http://localhost
+if "!browserChoice!"=="2" start http://localhost:3000
+if "!browserChoice!"=="3" start http://localhost:4200
+if "!browserChoice!"=="4" start http://localhost:5000
+if "!browserChoice!"=="5" start http://localhost:5173
+if "!browserChoice!"=="6" start http://localhost:5500
+if "!browserChoice!"=="7" start http://localhost:8000
+if "!browserChoice!"=="8" start http://localhost:8080
+if "!browserChoice!"=="9" start http://localhost:8888
+if "!browserChoice!"=="10" (
+    set /p customPort=Masukkan port number: 
+    if defined customPort start http://localhost:!customPort!
+)
+
+timeout /t 1 >nul
+goto localhost_menu
+
+:view_all_ports
+cls
+echo ===============================================================================
+echo                      ALL LISTENING PORTS
+echo ===============================================================================
+echo.
+echo Senarai semua ports yang sedang listening:
+echo.
+echo -------------------------------------------------------------------------------
+netstat -ano | findstr "LISTENING" | findstr "127.0.0.1\|0.0.0.0"
+echo -------------------------------------------------------------------------------
+echo.
+pause
+goto opt20
+
+:kill_by_port
+echo.
+set /p targetPort=Masukkan port number yang nak close: 
+
+if not defined targetPort goto localhost_menu
+
+echo.
+echo Mencari process pada port !targetPort!...
+
+:: Find PID using port
+set "foundPID="
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%targetPort% " ^| findstr "LISTENING"') do (
+    set "foundPID=%%a"
+    goto :found_target_pid
+)
+
+:found_target_pid
+if not defined foundPID (
+    echo [ERROR] Tiada process dijumpai pada port !targetPort!
+    pause
+    goto localhost_menu
+)
+
+:: Get process name
+set "foundProcess="
+for /f "tokens=1" %%a in ('tasklist /FI "PID eq !foundPID!" /NH 2^>nul') do (
+    set "foundProcess=%%a"
+)
+
+echo.
+echo Process dijumpai:
+echo Port    : !targetPort!
+echo Process : !foundProcess!
+echo PID     : !foundPID!
+echo.
+set /p confirmKill=Stop process ini? (Y/N): 
+
+if /i not "!confirmKill!"=="Y" goto localhost_menu
+
+echo.
+echo Stopping process...
+taskkill /PID !foundPID! /F >nul 2>&1
+
+if !errorlevel! EQU 0 (
+    echo [SUCCESS] Process pada port !targetPort! telah dihentikan!
+) else (
+    echo [ERROR] Gagal menghentikan process!
+)
+
+echo.
+pause
+goto opt20
+
+:quick_actions
+cls
+echo ===============================================================================
+echo                        QUICK ACTIONS
+echo ===============================================================================
+echo.
+echo Pilih action yang anda perlukan:
+echo.
+echo 1. Kill all Node.js processes
+echo 2. Kill all Python processes
+echo 3. Kill all PHP processes
+echo 4. Free port 3000 (React/Express)
+echo 5. Free port 5500 (Live Server)
+echo 6. Free port 8000 (Django/Laravel)
+echo 7. Restart VSCode (close all instances)
+echo 0. Kembali
+echo.
+set /p quickChoice=Pilih (0-7): 
+
+if "!quickChoice!"=="0" goto localhost_menu
+
+if "!quickChoice!"=="1" (
+    echo.
+    echo Killing all Node.js processes...
+    taskkill /F /IM node.exe >nul 2>&1
+    taskkill /F /IM npm.exe >nul 2>&1
+    echo [SUCCESS] Node.js processes terminated!
+    timeout /t 2 >nul
+    goto opt20
+)
+
+if "!quickChoice!"=="2" (
+    echo.
+    echo Killing all Python processes...
+    taskkill /F /IM python.exe >nul 2>&1
+    taskkill /F /IM pythonw.exe >nul 2>&1
+    echo [SUCCESS] Python processes terminated!
+    timeout /t 2 >nul
+    goto opt20
+)
+
+if "!quickChoice!"=="3" (
+    echo.
+    echo Killing all PHP processes...
+    taskkill /F /IM php.exe >nul 2>&1
+    taskkill /F /IM php-cgi.exe >nul 2>&1
+    echo [SUCCESS] PHP processes terminated!
+    timeout /t 2 >nul
+    goto opt20
+)
+
+if "!quickChoice!"=="4" (
+    echo.
+    echo Freeing port 3000...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3000 " ^| findstr "LISTENING"') do (
+        taskkill /PID %%a /F >nul 2>&1
+    )
+    echo [SUCCESS] Port 3000 is now free!
+    timeout /t 2 >nul
+    goto opt20
+)
+
+if "!quickChoice!"=="5" (
+    echo.
+    echo Freeing port 5500...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5500 " ^| findstr "LISTENING"') do (
+        taskkill /PID %%a /F >nul 2>&1
+    )
+    echo [SUCCESS] Port 5500 is now free!
+    timeout /t 2 >nul
+    goto opt20
+)
+
+if "!quickChoice!"=="6" (
+    echo.
+    echo Freeing port 8000...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000 " ^| findstr "LISTENING"') do (
+        taskkill /PID %%a /F >nul 2>&1
+    )
+    echo [SUCCESS] Port 8000 is now free!
+    timeout /t 2 >nul
+    goto opt20
+)
+
+if "!quickChoice!"=="7" (
+    echo.
+    echo Closing all VSCode instances...
+    taskkill /F /IM Code.exe >nul 2>&1
+    echo [SUCCESS] VSCode closed!
+    echo You can restart VSCode manually.
+    timeout /t 2 >nul
+    goto opt20
+)
+
+goto quick_actions
+
+:start_services
+cls
+echo ===============================================================================
+echo                    START LOCALHOST SERVICES
+echo ===============================================================================
+echo.
+echo Pilih service yang nak start:
+echo.
+echo 1. XAMPP Apache + MySQL
+echo 2. WAMP Server
+echo 3. Laragon
+echo 4. Open VSCode (current directory)
+echo 5. Open Command Prompt (untuk manual start)
+echo 0. Kembali
+echo.
+set /p startChoice=Pilih (0-5): 
+
+if "!startChoice!"=="0" goto localhost_menu
+
+if "!startChoice!"=="1" (
+    if exist "C:\xampp\xampp-control.exe" (
+        start "" "C:\xampp\xampp-control.exe"
+        echo XAMPP Control Panel dibuka!
+    ) else (
+        echo [ERROR] XAMPP tidak dijumpai di C:\xampp\
+    )
+    timeout /t 2 >nul
+    goto start_services
+)
+
+if "!startChoice!"=="2" (
+    if exist "C:\wamp64\wampmanager.exe" (
+        start "" "C:\wamp64\wampmanager.exe"
+        echo WAMP Server dibuka!
+    ) else (
+        echo [ERROR] WAMP tidak dijumpai di C:\wamp64\
+    )
+    timeout /t 2 >nul
+    goto start_services
+)
+
+if "!startChoice!"=="3" (
+    if exist "C:\laragon\laragon.exe" (
+        start "" "C:\laragon\laragon.exe"
+        echo Laragon dibuka!
+    ) else (
+        echo [ERROR] Laragon tidak dijumpai di C:\laragon\
+    )
+    timeout /t 2 >nul
+    goto start_services
+)
+
+if "!startChoice!"=="4" (
+    start code .
+    echo VSCode dibuka!
+    timeout /t 1 >nul
+    goto localhost_menu
+)
+
+if "!startChoice!"=="5" (
+    start cmd
+    echo Command Prompt dibuka!
+    timeout /t 1 >nul
+    goto localhost_menu
+)
+
+goto start_services
+
+:opt21
 echo.
 echo Membuka Control Panel...
 start control
 timeout /t 1 >nul
 goto menu
 
-:opt21
+:opt22
 echo.
 echo Membuka Disk Management...
 start diskmgmt.msc
 timeout /t 1 >nul
 goto menu
 
-:opt22
+:opt23
 echo.
 echo Memeriksa Lesen Windows...
 start cmd /k "slmgr /xpr & echo. & echo Tekan sebarang kekunci untuk tutup... & pause >nul"
 goto menu
 
-:opt23
+:opt24
 echo.
 echo Membuka Printer Settings...
 start control printers
 timeout /t 1 >nul
 goto menu
 
-:opt24
+:opt25
 echo.
 echo Membuka Dashboard Surat...
-start chrome https://www.google.com/webhp
+start chrome https://v0-crud-surat.vercel.app/dashboard/surat
 timeout /t 1 >nul
 goto menu
 
-:opt25
+:opt26
 cls
 setlocal enabledelayedexpansion
 echo ===============================================================================
@@ -1838,7 +2393,7 @@ endlocal
 pause
 goto menu
 
-:opt26
+:opt27
 cls
 setlocal enabledelayedexpansion
 echo ===============================================================================
@@ -2146,7 +2701,7 @@ pause
 endlocal
 goto menu
 
-:opt27
+:opt28
 cls
 echo ===============================================================================
 echo.
@@ -2159,4 +2714,3 @@ if /i "%confirm%"=="Y" (
 ) else (
     goto menu
 )
-
