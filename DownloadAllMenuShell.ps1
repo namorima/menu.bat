@@ -1,4 +1,5 @@
 # jalan kan ini "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser" jika error policy (tanpa tanda petik)
+# atau ini utk session semasa sahaja "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process"
 # Buat folder AllMenu jika belum ada
 New-Item -ItemType Directory -Path "AllMenu" -Force
 
